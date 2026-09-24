@@ -1,0 +1,997 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Unloader · test version</title>
+<meta name="description" content="Unloader takes things off your mind: capture everything, share the load with the people who help, and bundle tasks to save time.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#2F6F74">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧺</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EEF1EE; --surface:#FAFBF9; --ink:#1C2733; --muted:#5B6873; --line:#D5DBD6;
+  --act:#2F6F74; --act-ink:#FFFFFF;
+  --ant:#7A4E8C; --pln:#2F7F86; --sup:#C4861A; --exe:#A9B3AE;
+  --warn:#B4452F;
+  --head:"Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --body:"Figtree", "Segoe UI", system-ui, -apple-system, sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#141A1F; --surface:#1D252C; --ink:#E7ECE9; --muted:#9AA7AE; --line:#2F3A42;
+    --act:#5FB0B5; --act-ink:#0F1A1D; --ant:#B98CCB; --pln:#5FB0B5; --sup:#E0A94A; --exe:#55615B; --warn:#E07A62;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#141A1F; --surface:#1D252C; --ink:#E7ECE9; --muted:#9AA7AE; --line:#2F3A42;
+  --act:#5FB0B5; --act-ink:#0F1A1D; --ant:#B98CCB; --pln:#5FB0B5; --sup:#E0A94A; --exe:#55615B; --warn:#E07A62;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background:var(--paper);color:var(--ink);font:16px/1.5 var(--body);-webkit-text-size-adjust:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--act);outline-offset:2px}
+.wrap{max-width:720px;margin:0 auto;padding:16px 16px 110px}
+header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+.brand{font-family:var(--head);font-weight:700;font-size:1.6rem;letter-spacing:-.02em;margin:0}
+.brand small{display:block;font:500 .8rem/1.2 var(--body);color:var(--muted);letter-spacing:0}
+.as{display:flex;align-items:center;gap:6px;font-size:.85rem;color:var(--muted)}
+.as select{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 8px;color:var(--ink);max-width:140px}
+h2{font-family:var(--head);font-weight:700;font-size:1.35rem;letter-spacing:-.01em;margin:6px 0 4px}
+h3{font-family:var(--head);font-weight:500;font-size:1.05rem;margin:22px 0 8px}
+p.lead{margin:0 0 16px;color:var(--muted);max-width:60ch}
+.muted{color:var(--muted)}
+.small{font-size:.85rem}
+
+/* Load stack — the one memorable element */
+.stack{margin:18px 0 8px}
+.person{padding:14px 0;border-top:1px solid var(--line)}
+.person:last-child{border-bottom:1px solid var(--line)}
+.prow{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.pname{font-weight:600}
+.pname .role{font-weight:400;color:var(--muted);font-size:.85rem;margin-left:6px}
+.pscore{font-family:var(--head);font-weight:700;font-size:2rem;line-height:1;font-variant-numeric:tabular-nums}
+.bar{display:flex;height:22px;border-radius:4px;overflow:hidden;background:var(--line);margin:10px 0 6px}
+.bar span{display:block;height:100%;transition:width .4s ease}
+.bar .a{background:var(--ant)}.bar .p{background:var(--pln)}.bar .s{background:var(--sup)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.8rem;color:var(--muted);margin-top:4px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.insight{background:var(--surface);border-left:4px solid var(--act);padding:12px 14px;border-radius:0 8px 8px 0;margin:16px 0}
+
+/* Brain dump */
+.dump{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:18px}
+.dump textarea{width:100%;min-height:96px;border:0;background:transparent;resize:vertical;outline:none}
+.dump select{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 8px;color:var(--ink)}
+.dump a{color:var(--act)}
+.dump .row{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 12px;font-weight:600}
+.btn.primary{background:var(--act);border-color:var(--act);color:var(--act-ink)}
+.btn.ghost{background:transparent}
+.btn.danger{color:var(--warn)}
+.btn:disabled{opacity:.5;cursor:default}
+
+/* Task list */
+.cat{margin-top:18px}
+.cat h3{margin:0 0 4px;display:flex;justify-content:space-between}
+.task{border-bottom:1px solid var(--line)}
+.trow{display:flex;align-items:flex-start;gap:10px;padding:10px 0}
+.trow input[type=checkbox]{width:20px;height:20px;margin-top:2px;accent-color:var(--act);flex:none}
+.tmain{flex:1;min-width:0;background:none;border:0;text-align:left;padding:0}
+.ttitle{font-weight:500}
+.task.done .ttitle{text-decoration:line-through;color:var(--muted)}
+.tmeta{font-size:.8rem;color:var(--muted)}
+.tmeta .late{color:var(--warn);font-weight:600}
+.owners{display:flex;gap:3px;flex:none;margin-top:2px}
+.dot{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:.65rem;font-weight:600;color:#fff}
+.dot.ex{outline:2px dashed var(--exe);outline-offset:-2px;background:transparent!important;color:var(--muted)}
+.editor{padding:4px 0 16px 30px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.editor label{display:flex;flex-direction:column;font-size:.78rem;color:var(--muted);gap:3px}
+.editor .full{grid-column:1/-1}
+.editor .ph-e select{border-left:4px dashed var(--exe)}.editor .ph-p select{border-left:4px solid var(--pln)}
+.editor input,.editor select{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:7px 8px;color:var(--ink);min-width:0}
+.phases{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:10px;border:1px solid var(--line);border-radius:8px}
+.phases .ph-title{grid-column:1/-1;font-size:.8rem;color:var(--muted)}
+.ph-a select{border-left:4px solid var(--ant)}.ph-p select{border-left:4px solid var(--pln)}.ph-s select{border-left:4px solid var(--sup)}.ph-e select{border-left:4px dashed var(--exe)}
+
+/* Bundles */
+.bundle{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;margin:12px 0}
+.bundle.handoff{border-style:dashed}
+.bkind{font-size:.8rem;color:var(--muted)}
+.btitle{font-family:var(--head);font-weight:500;font-size:1.1rem;margin:2px 0 8px}
+.bundle ul{margin:0 0 10px;padding-left:18px}
+.bundle li{margin:2px 0}
+.save{display:flex;gap:16px;flex-wrap:wrap;font-size:.9rem;margin-bottom:10px}
+.save b{font-family:var(--head);font-size:1.15rem}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+
+/* Household */
+.mem{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.mem input,.mem select{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:7px 8px;min-width:0}
+.mem input{flex:1}
+.seg{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.seg label{border:1px solid var(--line);border-radius:999px;padding:6px 12px;background:var(--surface);cursor:pointer;font-size:.9rem}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label:has(input:checked){background:var(--act);color:var(--act-ink);border-color:var(--act)}
+
+.empty{padding:28px 0;color:var(--muted)}
+.hright{display:flex;align-items:center;gap:8px}
+.gear{background:var(--surface);border:1px solid var(--line);border-radius:8px;width:36px;height:34px;font-size:1rem;line-height:1}
+.gear[aria-pressed=true]{border-color:var(--act);box-shadow:inset 0 0 0 1px var(--act)}
+.capture{border-width:2px;border-color:var(--act)}
+.capture textarea{min-height:110px;font-size:1.02rem}
+.tools{display:flex;gap:6px}
+.tool{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:6px 12px;font-size:.88rem;font-weight:600;cursor:pointer}
+.tool[aria-disabled=true],.tool:disabled{opacity:.5;pointer-events:none}
+.scanres{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}
+.nudge{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:var(--surface);border:1px dashed var(--act);border-radius:10px;padding:10px 14px;margin:0 0 14px;font-weight:600}
+.nudge span{flex:1}.nudge b{color:var(--act)}
+.addchip{flex:none;border:1px dashed var(--line);background:transparent;border-radius:999px;padding:6px 12px;font-size:.85rem;color:var(--muted)}
+.linkbtn{background:none;border:0;padding:0;color:var(--act);font-weight:600;text-decoration:underline}
+.addp{display:flex;gap:8px}.addp input{flex:1}
+.pscore small{font:500 .78rem var(--body);color:var(--muted);margin-left:4px}
+details.note summary{cursor:pointer;color:var(--ink);font-weight:600;margin-bottom:4px}
+.review{border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.rv{padding:12px 14px;border-top:1px solid var(--line)}.rv:first-child{border-top:0}
+.rv p{margin:0 0 6px}.rv p:last-child{margin:0}
+.trend{display:flex;align-items:flex-end;gap:8px;height:150px;padding:8px 0;overflow-x:auto}
+.tcol{flex:1;min-width:36px;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px}
+.tb{width:100%;max-width:44px;background:var(--act);border-radius:4px 4px 0 0;transition:height .4s ease}
+.tcol:last-child .tb{background:var(--ant)}
+.tv{font-size:.78rem;font-variant-numeric:tabular-nums;color:var(--muted)}
+.tl{font-size:.7rem;color:var(--muted);white-space:nowrap}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.stats div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.stats b{display:block;font-family:var(--head);font-size:1.6rem;line-height:1.1;font-variant-numeric:tabular-nums}
+.stats span{font-size:.8rem;color:var(--muted)}
+nav.tabs button{font-size:.8rem}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px;margin-bottom:6px;scrollbar-width:none}
+.chips button{flex:none;display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:.88rem;font-weight:600;color:var(--ink)}
+.chips button i{width:8px;height:8px;border-radius:50%;background:var(--lc)}
+.chips button span{font-weight:400;color:var(--muted);font-size:.8rem}
+.chips button[aria-selected=true]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.chips button[aria-selected=true] span{color:inherit;opacity:.75}
+.tag{display:inline-block;font-size:.72rem;line-height:1.5;padding:0 6px;border-radius:3px;border-left:3px solid var(--lc);background:var(--paper);color:var(--ink);margin-right:4px}
+.mem .toggle{display:flex;align-items:center;gap:4px;font-size:.8rem;color:var(--muted);white-space:nowrap}
+.note{font-size:.8rem;color:var(--muted);margin-top:24px}
+
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px);z-index:5}
+nav.tabs .in{display:flex;max-width:720px;width:100%}
+nav.tabs button{flex:1;background:none;border:0;padding:12px 4px 10px;font-size:.85rem;color:var(--muted);font-weight:600;border-top:3px solid transparent}
+nav.tabs button[aria-selected=true]{color:var(--ink);border-top-color:var(--act)}
+.badge{display:inline-block;min-width:18px;padding:0 5px;border-radius:9px;background:var(--act);color:var(--act-ink);font-size:.7rem;margin-left:4px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(76px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:8px;font-size:.9rem;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9;max-width:90%}
+.toast.on{opacity:1}
+@media (max-width:480px){.editor{grid-template-columns:1fr;padding-left:0}.pscore{font-size:1.7rem}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"><p class="empty">Opening your household…</p></div>
+<nav class="tabs" id="tabs" hidden><div class="in">
+  <button data-tab="tasks">Tasks</button>
+  <button data-tab="bundles">Bundles</button>
+  <button data-tab="load">Load</button>
+  <button data-tab="insights">Insights</button>
+</div></nav>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(() => {
+/* ================= CONFIG: edit these two lines ================= */
+const CONFIG = {
+  AI_ENDPOINT: "/api/ai",        // the server function that talks to Claude
+  FEEDBACK_EMAIL: ""             // e.g. "hello@unloader.app" to show a feedback link
+};
+/* ================================================================ */
+const CATS = ["Kids","House & Maintenance","Food & Groceries","Health & Wellness","Car","Money & Admin","Family & Social"];
+const MODES = {home:"At home", errand:"Errand", appointment:"Appointment", call:"Phone call", online:"Online"};
+const RECUR = {none:"One-time", daily:"Daily", weekly:"Weekly", monthly:"Monthly", yearly:"Yearly"};
+const FREQ = {none:1, yearly:1, monthly:1.2, weekly:1.5, daily:2};
+const EMO = {1:1, 2:1.3, 3:1.6};
+const PW = {anticipate:1, plan:1, supervise:0.75};
+const ROLES = {adult:"Adult", helper:"Helper", roommate:"Roommate", kid:"Kid"};
+const COLORS = ["#2F6F74","#8C4E6E","#5C6BB0","#B0703A","#4E8C5A","#8A6BB0","#6E7A86"];
+const TYPES = {
+  couple:{label:"Couple", loadTitle:"Who carries the thinking", lead:"Mental load is the anticipating, planning and checking. Doing the task itself doesn't count."},
+  single:{label:"Single parent + helpers", loadTitle:"What's still on you", lead:"Helpers can take the doing. This shows how much of the thinking you still carry, and what you could hand off."},
+  roommates:{label:"Roommates", loadTitle:"Who keeps the place running", lead:"The noticing, planning and checking that keep a shared home working."}
+};
+
+let S = {members:[], tasks:[], settings:null, events:[], snapshots:[]};
+let me = null, tab = "tasks", open = null, dbApi = null, sampleFn = null, mcpApi = null, ready = false;
+let scan = {status:"idle", days:14, items:[], msg:""};
+let imgLimits = null;
+let listFilter = "all";
+let send = {who:null, days:7, text:"", dirty:false, status:"", draftUrl:""};
+function personTasks(id, days){
+  const horizon = addDays(today(), days);
+  return S.tasks.filter(t => !t.done && ["anticipate","plan","execute","supervise"].some(ph=>t.phases?.[ph]===id) && (!t.due || t.due <= horizon))
+    .sort((a,b)=>((a.due||"9999")>(b.due||"9999")?1:-1));
+}
+function buildMessage(id, days){
+  const m = mem(id); if (!m) return "";
+  const list = personTasks(id, days);
+  const from = mem(me)?.name || "";
+  const dayLabel = iso => new Date(iso+"T12:00:00").toLocaleDateString(undefined,{weekday:"long", month:"short", day:"numeric"});
+  const line = t => { const ph = t.phases||{}; let x = "- " + t.title;
+    if (t.place) x += " @ " + t.place; if (t.provider) x += " (with " + t.provider + ")";
+    const notes = [];
+    if (ph.plan===id && ph.execute!==id) notes.push("please plan and arrange this");
+    else if (ph.plan===id) notes.push("you decide when");
+    if (ph.supervise===id && ph.execute!==id) notes.push("please check it gets done");
+    if (ph.anticipate===id && ph.plan!==id) notes.push("let me know when it's needed");
+    return x + (notes.length ? " - " + notes.join(", ") : ""); };
+  const groups = []; const late = list.filter(t=>t.due && t.due < today());
+  if (late.length) groups.push(["Overdue", late]);
+  const dated = {}; list.filter(t=>t.due && t.due >= today()).forEach(t => (dated[t.due] ||= []).push(t));
+  Object.keys(dated).sort().forEach(d => groups.push([dayLabel(d), dated[d]]));
+  const undated = list.filter(t=>!t.due); if (undated.length) groups.push(["Anytime this " + (days<=7?"week":"period"), undated]);
+  // combined trips for what this person does
+  const trips = list.filter(t => t.phases?.execute===id && (t.mode==="errand"||t.mode==="appointment") && t.place);
+  const tripLines = []; const byPlace = {}; trips.forEach(t => (byPlace[t.place] ||= []).push(t));
+  for (const [pl, ts] of Object.entries(byPlace)) if (ts.length>1) tripLines.push(`- One stop at ${pl}: ${ts.map(t=>t.title).join("; ")}`);
+  const byArea = {}; trips.forEach(t => { const a = (S.settings?.places||[]).find(x=>x.name===t.place)?.area; if (a) (byArea[a] ||= []).push(t); });
+  for (const [a, ts] of Object.entries(byArea)){ const pls=[...new Set(ts.map(t=>t.place))]; if (pls.length>1) tripLines.push(`- One loop around ${a}: ${pls.join(" + ")}`); }
+  if (!list.length) return `Hi ${m.name},\n\nNothing on your list for the next ${days} days. Thank you!\n\n${from}`;
+  return `Hi ${m.name},\n\nHere's your list for ${fmtDate(today())} to ${fmtDate(addDays(today(), days))}:\n\n`
+    + groups.map(([h, ts]) => h + "\n" + ts.map(line).join("\n")).join("\n\n")
+    + (tripLines.length ? "\n\nTo save time, combine these:\n" + tripLines.join("\n") : "")
+    + `\n\nPlease reply when things are done or if anything changes. Thank you!\n\n${from}`;
+}
+function sendHTML(){
+  const others = S.members.filter(m=>m.id!==me);
+  if (!others.length) return "";
+  const m = mem(send.who);
+  if (m && !send.dirty) send.text = buildMessage(m.id, send.days);
+  const n = m ? personTasks(m.id, send.days).length : 0;
+  const email = m?.email || "", phone = m?.phone || "";
+  const subj = `Your list: ${fmtDate(today())} to ${fmtDate(addDays(today(), send.days))}`;
+  return `<h3>Send someone their list</h3><p class="small muted" style="margin-top:0">For people who don't use the app. Everything they do, plan or check, with trips they can combine.</p>
+  <div class="chips" aria-label="Choose a person">${others.map(o=>`<button data-sendwho="${o.id}" aria-selected="${o.id===send.who}" style="--lc:${o.color}"><i></i>${esc(o.name)}<span>${personTasks(o.id, send.days).length}</span></button>`).join("")}</div>
+  ${m ? `<div class="bundle">
+    <div class="row" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
+      <select id="sendDays" aria-label="Period">${[3,7,14].map(d=>`<option value="${d}" ${d===send.days?"selected":""}>Next ${d} days</option>`).join("")}</select>
+      <span class="small muted">${n} task${n===1?"":"s"}${send.dirty?" · edited":""}</span>
+      ${send.dirty?`<button class="btn ghost small" id="sendReset">Reset text</button>`:""}</div>
+    <textarea id="sendText" rows="12" aria-label="Message" style="width:100%;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px;font:inherit;font-size:.9rem;line-height:1.45">${esc(send.text)}</textarea>
+    <div class="mem" style="border:0"><input id="sendEmail" type="email" value="${esc(email)}" placeholder="${esc(m.name)}'s email" aria-label="Email"><input id="sendPhone" type="tel" value="${esc(phone)}" placeholder="Mobile number" aria-label="Mobile number"></div>
+    <div class="actions">
+      ${mcpApi && email ? `<button class="btn primary" id="sendDraft" ${send.status==="working"?"disabled":""}>${send.status==="working"?"Creating draft…":"Create Gmail draft"}</button>` : ""}
+      ${phone ? `<a class="btn ${mcpApi&&email?"":"primary"}" href="sms:${esc(phone.replace(/[^\d+]/g,""))}?&body=${esc(encodeURIComponent(send.text))}" target="_blank" rel="noopener">Text it</a>` : ""}
+      ${email ? `<a class="btn" href="mailto:${esc(email)}?subject=${esc(encodeURIComponent(subj))}&body=${esc(encodeURIComponent(send.text))}" target="_blank" rel="noopener">Open in email app</a>` : ""}
+      <button class="btn" id="sendCopy">Copy message</button></div>
+    ${send.status && send.status!=="working" ? `<p class="small" role="status" style="margin:8px 0 0">${send.status}</p>` : ""}
+    ${!email && !phone ? `<p class="small muted" style="margin:8px 0 0">Add an email or mobile number to send it directly, or copy the message.</p>` : ""}
+  </div>` : ""}`;
+}
+async function createDraft(){
+  const m = mem(send.who); if (!m?.email) return;
+  send.status = "working"; render();
+  try {
+    const res = await mcpApi.callTool("Gmail", "create_draft", {to:[m.email], subject:`Your list: ${fmtDate(today())} to ${fmtDate(addDays(today(), send.days))}`, body:send.text});
+    let p = res && res.payload; if (typeof p === "string"){ try { p = JSON.parse(p); } catch(e){ p = null; } }
+    const url = p?.viewUrl || "";
+    send.status = `Draft ready in Gmail. Review it and press send.${url?` <a href="${esc(url)}" target="_blank" rel="noopener">Open draft</a>`:""}`;
+  } catch(e){
+    send.status = esc(e && (e.code==="server_unavailable"||e.code==="upstream_error") ? "Gmail didn't confirm the draft. Check your Gmail drafts before trying again, so you don't create a duplicate." : mcpMsg(e));
+  }
+  render();
+}
+async function copyMessage(){
+  const ta = $("#sendText");
+  try { await navigator.clipboard.writeText(ta.value); toast("Message copied."); return; } catch(e){}
+  try { ta.focus(); ta.select(); if (document.execCommand("copy")) { toast("Message copied."); return; } } catch(e){}
+  toast("Select the text and copy it.");
+}
+const DEFAULT_LISTS = [{id:"personal",name:"Personal",count:true},{id:"kids",name:"Kids",count:true}];
+let more = false, addPerson = null, wipeArmed = false;
+const gauge = raw => Math.round(100*(1-Math.exp(-raw/35)));
+const level = g => g < 35 ? "Light" : g < 70 ? "Heavy" : "Overloaded";
+const LIST_COLORS = ["#5C6BB0","#C4861A","#2F7F86","#8C4E6E","#4E8C5A","#6E7A86","#B0703A"];
+const lists = () => (S.settings?.lists?.length ? S.settings.lists : DEFAULT_LISTS);
+function listOf(t){ const L = lists(); if (t.list && L.some(l=>l.id===t.list)) return t.list;
+  if (t.category==="Kids"){ const k = L.find(l=>/kid|child/i.test(l.name)); if (k) return k.id; } return L[0].id; }
+const listName = id => lists().find(l=>l.id===id)?.name || "";
+const listColor = id => { const i = lists().findIndex(l=>l.id===id); return LIST_COLORS[(i<0?0:i) % LIST_COLORS.length]; };
+const taskVisible = t => listFilter==="all" || listOf(t)===listFilter;
+const loadIncluded = t => listFilter==="all" ? lists().find(l=>l.id===listOf(t))?.count !== false : listOf(t)===listFilter;
+const listHint = () => `Each object also has "list": exactly one of ${lists().map(l=>l.name).join(" | ")}. Use a business list only for work or business tasks.\n`;
+function chipsHTML(forLoad){
+  const n = id => S.tasks.filter(t=>!t.done && (id==="all" ? (forLoad ? loadIncluded({...t}) || false : true) : listOf(t)===id)).length;
+  const allCount = forLoad ? S.tasks.filter(t=>!t.done && lists().find(l=>l.id===listOf(t))?.count!==false).length : S.tasks.filter(t=>!t.done).length;
+  return `<div class="chips" role="tablist" aria-label="Filter by list">
+    <button role="tab" data-list="all" aria-selected="${listFilter==="all"}">All<span>${allCount}</span></button>
+    ${lists().map(l=>`<button role="tab" data-list="${l.id}" aria-selected="${listFilter===l.id}" style="--lc:${listColor(l.id)}"><i></i>${esc(l.name)}<span>${S.tasks.filter(t=>!t.done && listOf(t)===l.id).length}</span></button>`).join("")}
+    ${forLoad?"":`<button class="addchip" data-goto="household" aria-label="Add a list, like a business">+ List</button>`}</div>`;
+}
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+const today = () => { const d = new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,10); };
+const addDays = (iso, n) => { const d = new Date(iso+"T12:00:00"); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); };
+const fmtDate = iso => iso ? new Date(iso+"T12:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric"}) : "";
+const lsGet = k => { try { return localStorage.getItem(k); } catch(e){ return null; } };
+const lsSet = (k,v) => { try { localStorage.setItem(k,v); } catch(e){} };
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("on"); clearTimeout(toast.t); toast.t=setTimeout(()=>t.classList.remove("on"),2400); }
+
+/* ---------- storage: shared db when available, local otherwise ---------- */
+const LKEY = "unloader-test-v1";
+const pending = {};
+async function writeDoc(path, body){
+  if (dbApi){
+    const prev = pending[path] || Promise.resolve();
+    const run = prev.catch(()=>{}).then(() => body === null ? dbApi.doc(path).delete() : dbApi.doc(path).set(body));
+    pending[path] = run;
+    try { await run; } catch(e){ toast(e && e.code === "quota_exceeded" ? "Storage is full. Delete some finished tasks." : "Couldn't save that change. Try again."); }
+  } else {
+    lsSet(LKEY, JSON.stringify(S));
+  }
+}
+function saveTask(t){ const i=S.tasks.findIndex(x=>x.id===t.id); if(i<0) S.tasks.push(t); else S.tasks[i]=t; render(); return writeDoc("tasks/"+t.id, t); }
+function delTask(id){ const t=S.tasks.find(x=>x.id===id); if (t) logEvent("dropped", t); S.tasks=S.tasks.filter(x=>x.id!==id); render(); return writeDoc("tasks/"+id, null); }
+function saveMember(m){ const i=S.members.findIndex(x=>x.id===m.id); if(i<0) S.members.push(m); else S.members[i]=m; render(); return writeDoc("members/"+m.id, m); }
+function delMember(id){ S.members=S.members.filter(x=>x.id!==id); render(); return writeDoc("members/"+id, null); }
+function saveSettings(s){ S.settings=s; render(); return writeDoc("settings/household", s); }
+
+/* ---------- event log: recorded silently as a side effect of normal use ---------- */
+function logEvent(type, t, extra){
+  const e = {id:uid(), type, taskId:t.id, title:String(t.title||"").slice(0,140), category:t.category||"", list:t.list||"",
+    due:t.due||"", executor:t.phases?.execute||"", planner:t.phases?.plan||"", by:me, at:Date.now(), ...(extra||{})};
+  S.events.push(e);
+  return writeDoc("events/"+e.id, e);
+}
+async function pruneEvents(){
+  if (S.events.length <= 3000) return;
+  const old = S.events.slice().sort((a,b)=>a.at-b.at).slice(0, S.events.length-2700);
+  for (const e of old){ S.events = S.events.filter(x=>x.id!==e.id); await writeDoc("events/"+e.id, null); }
+}
+async function assign(x, field, id){
+  if (field==="track"){ logEvent("handoff", x, {phase:"plan", from:x.phases?.plan||"", to:id}); return saveTask({...x, phases:{...x.phases, anticipate:id, plan:id}}); }
+  if (field==="execute") logEvent("handoff", x, {phase:"execute", from:x.phases?.execute||"", to:id});
+  return saveTask({...x, phases:{...x.phases, [field]:id}});
+}
+async function createTask(t){ await saveTask(t); await logEvent("created", t); }
+
+async function init(){
+  fallback(); // private, on-device storage for every tester
+  try {
+    const ctl = new AbortController(); const tm = setTimeout(()=>ctl.abort(), 5000);
+    const r = await fetch(CONFIG.AI_ENDPOINT, {method:"GET", signal:ctl.signal}); clearTimeout(tm);
+    const j = r.ok ? await r.json() : null;
+    if (j && j.ok){ sampleFn = {remote:true}; if (j.photos) imgLimits = {maxCount: j.maxImages || 3, mediaTypes:["image/*"]}; render(); }
+  } catch(e){ /* no AI server: keyword sorting still works */ }
+}
+function aiContext(){
+  return {today: today(), categories: CATS, places: (S.settings?.places||[]).map(p=>p.name),
+    members: S.members.map(m=>({name:m.name, role:m.role})), lists: lists().map(l=>l.name)};
+}
+async function aiCall(body){
+  let r;
+  try { r = await fetch(CONFIG.AI_ENDPOINT, {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(body)}); }
+  catch(e){ throw {code:"offline"}; }
+  if (r.status === 429) throw {code:"rate_limited"};
+  if (r.status === 413) throw {code:"image_rejected"};
+  if (!r.ok) throw {code:"failed"};
+  const j = await r.json();
+  if (!j || !Array.isArray(j.items)) throw {code:"failed"};
+  return j.items;
+}
+function shrink(file){
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file); const img = new Image();
+    img.onload = () => { const max = 1568, k = Math.min(1, max/Math.max(img.width, img.height));
+      const c = document.createElement("canvas"); c.width = Math.round(img.width*k); c.height = Math.round(img.height*k);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+      resolve({media_type:"image/jpeg", data: c.toDataURL("image/jpeg", 0.85).split(",")[1]}); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject({code:"image_rejected"}); };
+    img.src = url;
+  });
+}
+
+function fallback(){
+  dbApi = null;
+  try { const raw = lsGet(LKEY); if (raw) S = JSON.parse(raw); } catch(e){}
+  S.events ||= []; S.snapshots ||= [];
+  ready = true; render();
+}
+
+/* ---------- mental load math ---------- */
+const isLate = t => t.due && t.due < today() && !t.done;
+function taskFactor(t){ return (FREQ[t.recur]||1) * (EMO[t.weight]||1); }
+function loadFor(memberId){
+  const r = {anticipate:0, plan:0, supervise:0, total:0, invisible:0, items:[]};
+  for (const t of S.tasks){
+    if (t.done || !loadIncluded(t)) continue;
+    const f = taskFactor(t); let mine = 0;
+    for (const ph of ["anticipate","plan","supervise"]){
+      if (t.phases?.[ph] !== memberId) continue;
+      let v = PW[ph]*f;
+      if (isLate(t) && ph !== "plan") v *= 1.5; // overdue: more noticing and chasing
+      r[ph]+=v; mine+=v;
+    }
+    if (mine){ r.total+=mine; r.items.push({t, v:mine}); if (t.phases?.execute && t.phases.execute !== memberId) r.invisible+=mine; }
+  }
+  r.items.sort((a,b)=>b.v-a.v);
+  return r;
+}
+const pts = v => Math.round(v*10);
+
+/* ---------- bundling engine ---------- */
+function bundles(){
+  const horizon = addDays(today(), 14);
+  const openT = S.tasks.filter(t => !t.done && (!t.due || t.due <= horizon));
+  const out = [];
+  const placeOf = name => (S.settings?.places||[]).find(p=>p.name===name);
+  const antSave = list => { const vals=list.map(t=>PW.anticipate*taskFactor(t)); return vals.reduce((a,b)=>a+b,0)-Math.max(...vals); };
+  const trips = openT.filter(t => (t.mode==="errand"||t.mode==="appointment") && t.place);
+  // same place
+  const byPlace = {}; trips.forEach(t => (byPlace[t.place] ||= []).push(t));
+  const usedInPlace = new Set();
+  for (const [p, list] of Object.entries(byPlace)) if (list.length>1){
+    list.forEach(t=>usedInPlace.add(t.id));
+    out.push({kind:"One trip", title:`Do it all in one stop at ${p}`, tasks:list, minutes:(list.length-1)*25, mind:antSave(list)});
+  }
+  // same area, different places
+  const byArea = {};
+  trips.forEach(t => { const a = placeOf(t.place)?.area; if (a) (byArea[a] ||= []).push(t); });
+  for (const [a, list] of Object.entries(byArea)){
+    const places = [...new Set(list.map(t=>t.place))];
+    if (places.length>1) out.push({kind:"One loop", title:`Run one loop around ${a}: ${places.join(", ")}`, tasks:list, minutes:(places.length-1)*15 + 0, mind:antSave(list)});
+  }
+  // same mode
+  const calls = openT.filter(t=>t.mode==="call");
+  if (calls.length>1) out.push({kind:"Phone block", title:`Make all ${calls.length} calls in one sitting`, tasks:calls, minutes:calls.length*4, mind:antSave(calls)});
+  const online = openT.filter(t=>t.mode==="online");
+  if (online.length>1) out.push({kind:"Admin session", title:`Clear ${online.length} online tasks in one session`, tasks:online, minutes:online.length*5, mind:antSave(online)});
+  // same provider
+  const byProv = {}; openT.filter(t=>t.provider).forEach(t => (byProv[t.provider.trim().toLowerCase()] ||= []).push(t));
+  for (const list of Object.values(byProv)) if (list.length>1)
+    out.push({kind:"One booking", title:`Book together with ${list[0].provider}`, tasks:list, minutes:(list.length-1)*30, mind:antSave(list)});
+  // hand-offs: a helper already does the work, someone else still does the thinking
+  for (const h of S.members.filter(m=>m.role==="helper")){
+    const byCat = {};
+    S.tasks.filter(t=>!t.done && t.phases?.execute===h.id && ["anticipate","plan"].some(ph=>t.phases[ph] && t.phases[ph]!==h.id))
+      .forEach(t => (byCat[t.category] ||= []).push(t));
+    for (const [c, list] of Object.entries(byCat)){
+      const moved = list.reduce((s,t)=>s+["anticipate","plan"].reduce((a,ph)=>a+(t.phases[ph]!==h.id?PW[ph]*taskFactor(t):0),0),0);
+      out.push({kind:"Hand off the thinking", handoff:h.id, title:`${h.name} already does ${c.toLowerCase()}. Let ${h.name} own the planning too.`, tasks:list, minutes:0, mind:moved});
+    }
+  }
+  return out.sort((a,b)=>(b.mind*10+b.minutes/5)-(a.mind*10+a.minutes/5));
+}
+
+/* ---------- brain dump parsing ---------- */
+function ruleParse(line){
+  const s = line.toLowerCase();
+  let mode = "home";
+  if (/\b(call|phone|ring)\b/.test(s)) mode = "call";
+  else if (/\b(pay|email|order|renew|register|sign up|form|online|book online)\b/.test(s)) mode = "online";
+  else if (/\b(dentist|doctor|pediatric|vet|checkup|check-up|haircut|appointment|oil change)\b/.test(s)) mode = "appointment";
+  else if (/\b(buy|pick up|pickup|drop off|return|get|grab|store|shop)\b/.test(s)) mode = "errand";
+  let category = "House & Maintenance";
+  if (/\b(kid|school|homework|teacher|lunch|daycare|practice|recital|permission)\b/.test(s)) category = "Kids";
+  else if (/\b(grocer|milk|food|meal|dinner|costco|snack)\b/.test(s)) category = "Food & Groceries";
+  else if (/\b(doctor|dentist|meds|prescription|pharmacy|checkup|vaccine|therapy)\b/.test(s)) category = "Health & Wellness";
+  else if (/\b(car|oil|tire|registration|mechanic)\b/.test(s)) category = "Car";
+  else if (/\b(bill|pay|tax|insurance|bank|renew)\b/.test(s)) category = "Money & Admin";
+  else if (/\b(birthday|gift|party|grandma|visit)\b/.test(s)) category = "Family & Social";
+  const place = (S.settings?.places||[]).find(p => s.includes(p.name.toLowerCase()))?.name || "";
+  const provM = s.match(/\b(dentist|pediatrician|doctor|vet|mechanic|pharmacy)\b/);
+  const recur = /\bevery day|daily\b/.test(s)?"daily":/\bweekly|every week\b/.test(s)?"weekly":/\bmonthly|every month\b/.test(s)?"monthly":"none";
+  const L = lists(); const biz = /\b(client|invoice|contract|proposal|shoot|website|business|llc|tenant|listing|shopify|supplier)\b/.test(s) ? L.find(l=>/business|work|biz/i.test(l.name))?.id : "";
+  return {list: biz || "", title: line.trim(), category, mode, place, provider: provM ? provM[1] : "", minutes: 20, recur, due:"", weight:1, executor:""};
+}
+async function aiParse(lines){
+  const res = await aiCall({mode:"tasks", lines, context: aiContext()});
+  if (res.length !== lines.length) throw {code:"shape"};
+  return res;
+}
+async function sortDump(){
+  const ta = $("#dump"); const lines = ta.value.split(/\n+/).map(l=>l.trim()).filter(Boolean);
+  if (!lines.length){ toast("Write one task per line first."); return; }
+  const btn = $("#sortBtn"); btn.disabled = true; btn.textContent = "Sorting…";
+  let parsed = null;
+  if (sampleFn){ try { parsed = await aiParse(lines); } catch(e){ parsed = null; } }
+  if (!parsed) parsed = lines.map(ruleParse);
+  for (const p of parsed) await createTask(makeTask(p));
+  ta.value = ""; btn.disabled = false; btn.textContent = "Add";
+  toast(`Added ${parsed.length} task${parsed.length>1?"s":""}. Tap any task to set who does it.`);
+}
+function makeTask(p){
+    const exec = S.members.find(m => p.executor && m.name.toLowerCase()===String(p.executor).toLowerCase())?.id || me;
+    return {
+      id: uid(), title: String(p.title||"").slice(0,140) || "Untitled",
+      category: CATS.includes(p.category)?p.category:"House & Maintenance",
+      mode: MODES[p.mode]?p.mode:"home", place: (S.settings?.places||[]).some(x=>x.name===p.place)?p.place:"",
+      provider: String(p.provider||"").slice(0,60), minutes: Math.max(5, Math.min(600, Number(p.minutes)||20)),
+      recur: RECUR[p.recur]?p.recur:"none", due: /^\d{4}-\d{2}-\d{2}$/.test(p.due||"")?p.due:"",
+      weight: [1,2,3].includes(Number(p.weight))?Number(p.weight):1,
+      list: listFilter!=="all" ? listFilter : (lists().find(l=>l.id===p.list || l.name.toLowerCase()===String(p.list||"").toLowerCase().trim())?.id || ""),
+      phases:{anticipate:me, plan:me, execute:exec, supervise:me}, done:false, created:Date.now()
+    };
+}
+
+/* ---------- inbox scan (Gmail connector) ---------- */
+function mcpMsg(e){
+  switch (e && e.code){
+    case "needs_reauth": return "Gmail needs to be reconnected. Reconnect it in claude.ai Settings, Connectors, then scan again.";
+    case "server_not_connected": return "Gmail isn't connected. Add it in claude.ai Settings, Connectors, then scan again.";
+    case "selection_required": return "You have more than one Gmail connector. Choose one in the prompt, then scan again.";
+    case "not_in_manifest": return "Gmail access is turned off for this page. Allow it when asked to scan.";
+    case "blocked_by_policy": case "approval_required": return "Your organization's settings don't allow Gmail here.";
+    case "server_unavailable": case "upstream_error": return "Gmail didn't respond. Wait a moment and scan again.";
+    case "tool_error": return "Gmail reported a problem: " + (e.message || "unknown error");
+    case "not_granted": case "capability_disabled": case "capability_removed": return "Email scanning isn't available in this view.";
+    default: return "The scan didn't finish. Try again.";
+  }
+}
+const ACTION_RX = /(appointment|appt|reminder|due|payment|invoice|bill|statement|form|permission|school|class|teacher|rsvp|invit|confirm|renew|expir|pick ?up|registration|schedul|field trip|conference)/i;
+async function scanInbox(){
+  scan = {...scan, status:"loading", msg:"Reading recent emails…", items:[]}; render();
+  let res;
+  try { res = await mcpApi.callTool("Gmail", "search_threads", {query:`newer_than:${scan.days}d -category:promotions -category:social -in:sent`, pageSize:40}); }
+  catch(e){ scan = {...scan, status:"error", msg:mcpMsg(e)}; render(); return; }
+  let p = res && res.payload;
+  if (typeof p === "string"){ try { p = JSON.parse(p); } catch(e){ p = null; } }
+  if (!p || typeof p !== "object"){ const txt = (res?.content||[]).find(c=>c.type==="text")?.text; try { p = JSON.parse(txt); } catch(e){ p = {}; } }
+  const emails = (p.threads||[]).map(t => { const ms = t.messages||[]; const m = ms[ms.length-1]||{};
+    return {subject:m.subject||"(no subject)", snippet:String(m.snippet||"").replace(/[\u034f\u200c\s]+/g," ").trim().slice(0,300), sender:m.sender||"", date:String(m.date||"").slice(0,10), url:t.viewUrl||m.viewUrl||""}; });
+  if (!emails.length){ scan = {...scan, status:"error", msg:`No emails in the last ${scan.days} days outside promotions and social.`}; render(); return; }
+  scan = {...scan, msg:`Finding tasks in ${emails.length} emails…`}; render();
+  let found = null;
+  if (sampleFn){
+    const prompt = `You find household to-dos in a parent's recent emails for a mental-load app. Today is ${today()}.
+Extract ONLY things someone in the household must do, decide, attend, pay or remember: appointments, school forms and events, bills or payments due, pickups, renewals, RSVPs, deadlines.
+SKIP shipping and delivery updates, receipts, marketing, newsletters or notifications with nothing to act on. One email can yield 0, 1 or several tasks.
+Categories: ${CATS.join(" | ")}
+Modes: home, errand, appointment, call, online
+${listHint()}Return ONLY a JSON array (empty [] if nothing) of {"email": the email number, "title": short action like "Sign field trip form", "category", "mode", "provider": who it's with or "", "due": "YYYY-MM-DD" if a date is stated or clearly implied else "", "weight": 1 light, 2 heavy, 3 worrying}.
+Emails:
+${emails.map((e,i)=>`${i+1}. From: ${e.sender} | Date: ${e.date} | Subject: ${e.subject} | Preview: ${e.snippet}`).join("\n")}`;
+    try { found = await sampleFn.json(prompt, {modelTier:"default"}); } catch(e){ found = null; }
+  }
+  let viaAI = Array.isArray(found);
+  if (!viaAI) found = emails.map((e,i)=>({e, i})).filter(x=>ACTION_RX.test(x.e.subject+" "+x.e.snippet)).map(x=>({...ruleParse(x.e.subject), email:x.i+1}));
+  const items = found.filter(f => emails[(Number(f.email)||0)-1]).map(f => ({...f, pick:true, src:{kind:"email", ...emails[Number(f.email)-1]}}));
+  scan = {...scan, status:"review", items, msg: items.length ? (viaAI ? "Claude found these. Untick anything that isn't yours to handle." : "Matched by keywords. Untick anything that isn't a task.") : "Nothing actionable found in that range."};
+  render();
+}
+async function addScanned(){
+  const picked = scan.items.filter(x=>x.pick);
+  for (const f of picked){ const {src, pick, email, source, ...p} = f; await createTask(makeTask(p)); }
+  scan = {...scan, status:"idle", items:[], msg:""}; render();
+  toast(`Added ${picked.length} task${picked.length===1?"":"s"}.`);
+}
+async function scanPhotos(files){
+  files = [...files].slice(0, imgLimits?.maxCount || 1);
+  if (!files.length) return;
+  scan = {...scan, status:"loading", msg:`Reading ${files.length} photo${files.length>1?"s":""}… this can take up to a minute.`, items:[]}; render();
+  const prompt = `These are photos a parent took of documents for a household mental-load app: school flyers, letters, bills, appointment cards, forms, receipts, handwritten notes or lists, whiteboards or calendars. Today is ${today()}.
+Extract every thing someone in the household must do, decide, attend, pay, bring or remember. A handwritten list becomes one task per item. A flyer with several dates becomes one task per date or deadline. Skip anything purely informational.
+Categories: ${CATS.join(" | ")}
+Modes: home, errand, appointment, call, online
+Saved places (use one exactly or ""): ${(S.settings?.places||[]).map(p=>p.name).join(" | ") || "none"}
+${listHint()}Return ONLY a JSON array (empty [] if nothing) of {"title": short action like "Pay water bill" or "Bring snacks to class party", "category", "mode", "place", "provider": who it's with or "", "due": "YYYY-MM-DD" if a date is shown or clearly implied else "", "weight": 1 light, 2 heavy, 3 worrying, "source": 2-5 words naming the document, e.g. "School picnic flyer"}.`;
+  let found;
+  try { found = await aiCall({mode:"photo", images: await Promise.all(files.map(shrink)), context: aiContext()}); }
+  catch(e){
+    const msg = {image_rejected:"That photo couldn't be read. Use a JPEG, PNG or WebP under 20 MB.", images_unavailable:"Photo scanning isn't available in this view.", not_granted:"Photo scanning needs your permission to use Claude. Allow it when asked.", rate_limited:"Too many scans in a short time. Wait a few minutes and try again.", offline:"No connection. Check your internet and try again.", refused:"Claude couldn't process this photo. Try a different one.", cancelled:"Scan stopped."}[e && e.code] || "The photo scan didn't finish. Try again with a clearer photo.";
+    scan = {...scan, status:"error", msg}; render(); return;
+  }
+  const items = (Array.isArray(found)?found:[]).map(f => ({...f, pick:true, src:{kind:"photo", label:String(f.source||"photo").slice(0,60)}}));
+  scan = {...scan, status:"review", items, msg: items.length ? "Found in your photo. Untick anything that isn't a task, and check dates before adding." : "No tasks found. Try a closer, well-lit photo."};
+  render();
+}
+function scanBodyHTML(){
+  const srcLine = f => f.src.kind==="photo" ? `from ${esc(f.src.label)}` : `from ${esc(String(f.src.sender||"").replace(/<.*>/,"").trim())}${f.src.url?` · <a href="${esc(f.src.url)}" target="_blank" rel="noopener">open email</a>`:""}`;
+  if (scan.status === "loading") return `<p class="small muted" role="status" style="margin:10px 0 0">${esc(scan.msg)}</p>`;
+  if (scan.status === "error") return `<p class="small" style="color:var(--warn);margin:10px 0 0" role="status">${esc(scan.msg)}</p>`;
+  if (scan.status !== "review") return "";
+  return `<div class="scanres"><p class="small muted">${esc(scan.msg)}</p>` + scan.items.map((f,i)=>{ const meta=[f.due?fmtDate(f.due):"", MODES[f.mode]||"", f.provider].filter(Boolean).map(esc).join(" · ");
+      return `<div class="trow"><input type="checkbox" data-pick="${i}" ${f.pick?"checked":""} aria-label="Add ${esc(f.title)}">
+      <span class="tmain"><div class="ttitle">${esc(f.title)}</div><div class="tmeta">${meta}${meta?" · ":""}${srcLine(f)}</div></span></div>`; }).join("")
+    + `<div class="actions" style="margin-top:8px">${scan.items.length?`<button class="btn primary" id="addScan">Add ${scan.items.filter(x=>x.pick).length}</button>`:""}<button class="btn ghost" id="clearScan">Dismiss</button></div></div>`;
+}
+
+/* ---------- actions ---------- */
+function toggleDone(id){
+  const t = S.tasks.find(x=>x.id===id); if(!t) return;
+  if (!t.done) logEvent("done", t, {onTime: !t.due || today() <= t.due, day: today()});
+  else logEvent("reopened", t);
+  if (!t.done && t.recur && t.recur!=="none"){
+    const step = {daily:1, weekly:7, monthly:30, yearly:365}[t.recur];
+    saveTask({...t, due: addDays(t.due && t.due>today()? t.due : today(), step)}); toast(`Done. Next one is ${fmtDate(addDays(t.due && t.due>today()?t.due:today(), step))}.`);
+  } else saveTask({...t, done:!t.done});
+}
+async function scheduleBundle(i){
+  const b = bundles()[i]; if(!b) return;
+  const dates = b.tasks.map(t=>t.due).filter(Boolean).sort();
+  const day = dates[0] ? (dates[0] < today() ? today() : dates[0]) : addDays(today(), 3);
+  const bid = uid();
+  for (const t of b.tasks){ await saveTask({...t, due:day, bundle:b.kind}); await logEvent("bundled", t, {bid, kind:b.kind, day, minutes:b.minutes, size:b.tasks.length}); }
+  toast(`Grouped ${b.tasks.length} tasks on ${fmtDate(day)}.`);
+}
+async function handoff(i, full){
+  const b = bundles()[i]; if(!b) return; const h = b.handoff;
+  for (const t of b.tasks){ await saveTask({...t, phases:{...t.phases, anticipate:h, plan:h, ...(full?{supervise:h}:{})}}); await logEvent("handoff", t, {phase:"plan", from:t.phases?.plan||"", to:h}); }
+  const name = S.members.find(m=>m.id===h)?.name;
+  toast(full ? `${name} now owns these completely.` : `${name} now plans these. You still check they're done.`);
+}
+
+/* ---------- onboarding / example ---------- */
+async function createHousehold(example){
+  const type = document.querySelector('input[name=htype]:checked')?.value || "single";
+  const name = ($("#myname").value || "Me").trim().slice(0,30);
+  const you = {id:uid(), name, role:"adult", color:COLORS[0]};
+  me = you.id; lsSet("unloader-me", me);
+  const places = example ? [{name:"Costco", area:"Uptown"},{name:"CVS", area:"Uptown"},{name:"School", area:"Near home"},{name:"Smith's", area:"Near home"}] : [];
+  await saveSettings({type, places});
+  await saveMember(you);
+  if (!example) { tab="tasks"; render(); setTimeout(()=>$("#dump")?.focus(), 50); return; }
+  const others = type==="couple" ? [{name:"Partner", role:"adult"}] : type==="roommates" ? [{name:"Sam", role:"roommate"},{name:"Jo", role:"roommate"}] : [{name:"Maria", role:"helper"},{name:"Grandma", role:"helper"}];
+  const ids = [];
+  for (const [k,o] of others.entries()){ const m={id:uid(), ...o, color:COLORS[k+1]}; ids.push(m.id); await saveMember(m); }
+  const a = ids[0], b = ids[1] || ids[0], y = you.id;
+  const T = (title, category, mode, place, provider, recur, due, weight, ph) => ({id:uid(), title, category, mode, place, provider, minutes:20, recur, due: due===null?"":addDays(today(),due), weight, phases:ph, done:false, created:Date.now()});
+  const ex = [
+    T("Buy school snacks and paper towels","Food & Groceries","errand","Costco","","weekly",2,1,{anticipate:y,plan:y,execute:a,supervise:y}),
+    T("Pick up allergy prescription","Health & Wellness","errand","CVS","","monthly",1,2,{anticipate:y,plan:y,execute:y,supervise:y}),
+    T("Return library books","Kids","errand","School","","none",4,1,{anticipate:y,plan:y,execute:a,supervise:y}),
+    T("Book dentist cleaning for oldest","Health & Wellness","call","","Bright Smiles Dental","yearly",6,1,{anticipate:y,plan:y,execute:y,supervise:y}),
+    T("Book dentist cleaning for youngest","Health & Wellness","call","","Bright Smiles Dental","yearly",9,1,{anticipate:y,plan:y,execute:y,supervise:y}),
+    T("Call about the water bill charge","Money & Admin","call","","","none",-2,3,{anticipate:y,plan:y,execute:y,supervise:y}),
+    T("Pay car insurance","Money & Admin","online","","","monthly",5,1,{anticipate:y,plan:y,execute:y,supervise:y}),
+    T("Sign field-trip form","Kids","online","","","none",3,1,{anticipate:y,plan:y,execute:y,supervise:y}),
+    T("Weekly laundry and bedsheets","House & Maintenance","home","","","weekly",1,1,{anticipate:y,plan:y,execute:a,supervise:y}),
+    T("Kids' after-school pickups","Kids","home","","","weekly",1,2,{anticipate:y,plan:y,execute:b,supervise:y}),
+    T("Plan dinners for the week","Food & Groceries","home","","","weekly",2,1,{anticipate:y,plan:y,execute:type==="couple"?a:y,supervise:y}),
+    T("Oil change","Car","appointment","","","yearly",12,1,{anticipate:type==="couple"?a:y,plan:type==="couple"?a:y,execute:type==="couple"?a:y,supervise:y}),
+  ];
+  for (const t of ex) await createTask(t);
+  tab = "tasks"; render();
+}
+
+/* ---------- rendering ---------- */
+const mem = id => S.members.find(m=>m.id===id);
+const initials = n => (n||"?").split(/\s+/).map(w=>w[0]).join("").slice(0,2).toUpperCase();
+function render(){
+  if (!ready) return;
+  const app = $("#app"), nav = $("#tabs");
+  if (!S.settings || !S.members.length){ nav.hidden = true; app.innerHTML = onboardingHTML(); bindOnboarding(); return; }
+  me = lsGet("unloader-me"); if (!mem(me)) { me = S.members[0].id; lsSet("unloader-me", me); }
+  nav.hidden = false;
+  const nb = bundles().length;
+  nav.querySelectorAll("button").forEach(b => { b.setAttribute("aria-selected", b.dataset.tab===tab); if (b.dataset.tab==="bundles") b.innerHTML = "Bundles" + (nb?`<span class="badge">${nb}</span>`:""); });
+  const type = TYPES[S.settings.type] || TYPES.single;
+  app.innerHTML = `<header class="top"><h1 class="brand">Unloader<small>${esc(type.label)}</small></h1>
+    <span class="hright"><label class="as">You are <select id="meSel">${S.members.map(m=>`<option value="${m.id}" ${m.id===me?"selected":""}>${esc(m.name)}</option>`).join("")}</select></label>
+    <button class="gear" id="gear" aria-label="Household settings" aria-pressed="${tab==="household"}">⚙️</button></span></header>`
+    + ({load:loadHTML, tasks:tasksHTML, bundles:bundlesHTML, insights:insightsHTML, household:householdHTML}[tab])(type)
+    + `<p class="note">Test version · your data stays on this device${CONFIG.FEEDBACK_EMAIL?` · <a href="mailto:${esc(CONFIG.FEEDBACK_EMAIL)}?subject=${encodeURIComponent("Unloader feedback")}">Send feedback</a>`:""}</p>`;
+  $("#meSel").onchange = e => { me = e.target.value; lsSet("unloader-me", me); render(); };
+  $("#gear").onclick = () => { tab = tab==="household" ? "tasks" : "household"; open = null; render(); window.scrollTo(0,0); };
+  bind();
+}
+function onboardingHTML(){
+  return `<header class="top"><h1 class="brand">Unloader<small>Take things off your mind</small></h1></header>
+  <h2>Who runs your home?</h2>
+  <div class="seg" role="radiogroup" aria-label="Household type">${Object.entries(TYPES).map(([k,v])=>`<label><input type="radio" name="htype" value="${k}" ${k==="single"?"checked":""}>${esc(v.label)}</label>`).join("")}</div>
+  <label class="small muted" for="myname">Your name</label>
+  <div class="mem" style="border:0"><input id="myname" placeholder="Your name" maxlength="30" autocomplete="given-name"></div>
+  <div class="actions" style="margin-top:14px"><button class="btn primary" id="startBlank">Get started</button></div>
+  <p class="small muted" style="margin-top:18px">This is a test version. Everything you enter stays on this device.</p>
+  <p class="small muted">You can add helpers, a partner or roommates later, right when you assign something. <button class="linkbtn" id="startEx">Or explore an example household</button></p>`;
+}
+function bindOnboarding(){ $("#startBlank").onclick=()=>createHousehold(false); $("#startEx").onclick=()=>createHousehold(true); }
+
+function loadHTML(type){
+  const people = S.members.map(m => ({m, l:loadFor(m.id)})).filter(x => x.m.role!=="kid" || x.l.total>0);
+  const total = people.reduce((s,x)=>s+x.l.total,0);
+  const max = Math.max(1, ...people.map(x=>x.l.total));
+  const mine = people.find(x=>x.m.id===me);
+  let insight = "";
+  if (total){
+    const share = Math.round((mine?.l.total||0)/total*100);
+    if (S.settings.type==="single"){
+      const helpDo = S.tasks.filter(t=>!t.done && loadIncluded(t) && mem(t.phases?.execute)?.role==="helper").length;
+      const helpPlan = S.tasks.filter(t=>!t.done && loadIncluded(t) && mem(t.phases?.plan)?.role==="helper").length;
+      insight = `You hold <b>${share}%</b> of the household's thinking. Helpers do ${helpDo} task${helpDo===1?"":"s"} but plan ${helpPlan}. Check Bundles for what you could hand off.`;
+    } else {
+      insight = people.filter(x=>x.l.total).map(x=>`${esc(x.m.name)} <b>${Math.round(x.l.total/total*100)}%</b>`).join(", ") + " of the planning and checking.";
+    }
+  }
+  const excluded = lists().filter(l=>l.count===false).map(l=>l.name);
+  return `<h2>${esc(type.loadTitle)}</h2><p class="lead">${esc(type.lead)}</p>${chipsHTML(true)}
+  ${listFilter==="all" && excluded.length ? `<p class="small muted" style="margin-top:0">Not counted in the total: ${esc(excluded.join(", "))}. Change this in ⚙️.</p>` : ""}
+  ${total ? `<div class="insight">${insight}</div>` : `<p class="empty">No open tasks yet. Add some in Tasks.</p>`}
+  <div class="stack">${people.map(({m,l}) => `<div class="person">
+    <div class="prow"><span class="pname">${esc(m.name)}<span class="role">${ROLES[m.role]}</span></span><span class="pscore" aria-label="Load ${gauge(l.total)} out of 100">${gauge(l.total)}<small>/100 · ${level(gauge(l.total))}</small></span></div>
+    <div class="bar" role="img" aria-label="Noticing, planning and checking">
+      <span class="a" style="width:${l.anticipate/max*100}%"></span><span class="p" style="width:${l.plan/max*100}%"></span><span class="s" style="width:${l.supervise/max*100}%"></span></div>
+    <div class="tmeta">${l.items.length} thing${l.items.length===1?"":"s"} on their mind${(()=>{ const n=l.items.filter(x=>x.t.phases?.execute && x.t.phases.execute!==m.id).length; return n?` · ${n} of them done by someone else`:""; })()}</div>
+  </div>`).join("")}</div>
+  <div class="legend"><span><i style="background:var(--ant)"></i>Noticing</span><span><i style="background:var(--pln)"></i>Planning</span><span><i style="background:var(--sup)"></i>Checking</span></div>
+  ${mine && mine.l.items.length ? `<h3>Heaviest on ${esc(mine.m.name)}'s mind</h3>${mine.l.items.slice(0,5).map(({t,v})=>`<div class="task"><div class="trow"><span class="tmain"><div class="ttitle">${esc(t.title)}</div><div class="tmeta">${[isLate(t)?'<span class="late">overdue</span>':"", t.recur!=="none"?RECUR[t.recur].toLowerCase():"", t.weight>1?(t.weight===3?"worrying":"heavy"):""].filter(Boolean).join(" · ") || "on your mind"}</div></span></div></div>`).join("")}` : ""}
+  <details class="note"><summary>How the load is calculated</summary>Each thing you notice, plan or check counts, weighted by how often it repeats and how heavy it feels. Overdue things weigh more because they need chasing. Doing the task itself doesn't count.</details>`;
+}
+
+function tasksHTML(){
+  const shown = S.tasks.filter(taskVisible);
+  const byCat = {}; shown.slice().sort((a,b)=>(a.done-b.done)||((a.due||"9")>(b.due||"9")?1:-1)).forEach(t => (byCat[t.category] ||= []).push(t));
+  const busy = scan.status === "loading";
+  const bs = S.tasks.length ? bundles() : []; const bm = bs.reduce((x,b)=>x+b.minutes,0);
+  return `<div class="dump capture">
+    <textarea id="dump" placeholder="What's on your mind? One thing per line.&#10;Tip: tap the mic on your keyboard to just talk." aria-label="What's on your mind"></textarea>
+    <div class="row"><span class="tools">
+      ${imgLimits?`<label class="tool" title="Photo of a flyer, bill or note" ${busy?'aria-disabled="true"':""}>📷<span>Photo</span><input type="file" id="photoIn" accept="${esc((imgLimits.mediaTypes||["image/jpeg","image/png"]).join(","))}" ${imgLimits.maxCount>1?"multiple":""} hidden></label>`:""}
+      ${mcpApi?`<button class="tool" id="scanBtn" title="Find tasks in the last ${scan.days} days of Gmail" ${busy?"disabled":""}>✉️<span>Email</span></button>`:""}
+    </span><button class="btn primary" id="sortBtn">Add</button></div>
+    ${scanBodyHTML()}</div>
+  ${bs.length ? `<button class="nudge" data-goto="bundles">🧺 <span>${bs.length} bundle${bs.length===1?"":"s"} ready${bm?`, saving about ${bm} min`:""}</span><b>→</b></button>` : ""}
+  ${S.tasks.length ? chipsHTML(false) : ""}
+  ${listFilter!=="all" ? `<p class="small muted" style="margin:-4px 0 0">New tasks go to ${esc(listName(listFilter))}.</p>` : ""}
+  ${shown.length ? CATS.filter(c=>byCat[c]).map(c => `<div class="cat"><h3><span>${esc(c)}</span><span class="small muted">${byCat[c].filter(t=>!t.done).length} open</span></h3>${byCat[c].map(taskHTML).join("")}</div>`).join("") : `<p class="empty">${S.tasks.length ? "No tasks in this list yet." : "Empty your head into the box above. Messy is fine: Unloader sorts it, and you can snap a photo of a school flyer or pull tasks from email."}</p>`}`;
+}
+function taskHTML(t){
+  const ph = t.phases||{};
+  const dot = (id, cls, label) => { const m = mem(id); return `<span class="dot ${cls}" style="background:${m?.color||"#999"}" title="${label}: ${esc(m?.name||"nobody")}">${esc(initials(m?.name))}</span>`; };
+  const meta = [t.due?(isLate(t)?`<span class="late">${fmtDate(t.due)}, overdue</span>`:fmtDate(t.due)):"", MODES[t.mode], t.place, t.provider, t.recur!=="none"?RECUR[t.recur]:""].filter(Boolean).map(x=>x.startsWith("<")?x:esc(x)).join(" · ");
+  const tag = listFilter==="all" ? `<span class="tag" style="--lc:${listColor(listOf(t))}">${esc(listName(listOf(t)))}</span>` : "";
+  return `<div class="task ${t.done?"done":""}">
+    <div class="trow"><input type="checkbox" data-done="${t.id}" ${t.done?"checked":""} aria-label="Done: ${esc(t.title)}">
+      <button class="tmain" data-open="${t.id}" aria-expanded="${open===t.id}"><div class="ttitle">${esc(t.title)}</div><div class="tmeta">${tag}${meta}</div></button>
+      <span class="owners">${dot(ph.anticipate,"","Notices")}${dot(ph.execute,"ex","Does")}</span></div>
+    ${open===t.id ? editorHTML(t) : ""}</div>`;
+}
+function editorHTML(t){
+  const opt = (obj, v) => Object.entries(obj).map(([k,l])=>`<option value="${k}" ${String(k)===String(v)?"selected":""}>${esc(l)}</option>`).join("");
+  const memOpts = v => S.members.map(m=>`<option value="${m.id}" ${m.id===v?"selected":""}>${esc(m.name)}</option>`).join("") + `<option value="__new">+ Add person…</option>`;
+  const places = {"":"No place", ...Object.fromEntries((S.settings.places||[]).map(p=>[p.name,p.name]))};
+  const f = (k, label, inner, cls="") => `<label class="${cls}">${label}${inner}</label>`;
+  const adding = addPerson && addPerson.taskId===t.id;
+  return `<div class="editor" data-edit="${t.id}">
+    ${f("title","Task",`<input data-f="title" value="${esc(t.title)}" maxlength="140">`,"full")}
+    ${f("due","When",`<input type="date" data-f="due" value="${esc(t.due)}">`)}
+    ${f("recur","Repeats",`<select data-f="recur">${opt(RECUR,t.recur)}</select>`)}
+    <label class="ph-e">Who does it<select data-ph="execute">${memOpts(t.phases?.execute)}</select></label>
+    <label class="ph-p">Who keeps track<select data-track="1">${memOpts(t.phases?.plan)}</select></label>
+    ${adding ? `<div class="full addp"><input id="newPerson" placeholder="Name, e.g. Maria" maxlength="30" aria-label="New person's name"><button class="btn primary" id="newPersonAdd">Add</button><button class="btn ghost" id="newPersonCancel">Cancel</button></div>` : ""}
+    <p class="full small muted" style="margin:-4px 0 0">Keeping track means noticing it's needed and deciding when. That's the mental load; doing it isn't.</p>
+    ${more ? `
+    ${f("list","List",`<select data-f="list">${lists().map(l=>`<option value="${l.id}" ${l.id===listOf(t)?"selected":""}>${esc(l.name)}</option>`).join("")}</select>`)}
+    ${f("category","Category",`<select data-f="category">${opt(Object.fromEntries(CATS.map(c=>[c,c])), t.category)}</select>`)}
+    ${f("mode","Type",`<select data-f="mode">${opt(MODES,t.mode)}</select>`)}
+    ${f("place","Place",`<select data-f="place">${opt(places,t.place)}</select>`)}
+    ${f("provider","With",`<input data-f="provider" value="${esc(t.provider)}" placeholder="e.g. Bright Smiles Dental">`)}
+    ${f("weight","How it feels",`<select data-f="weight">${opt({1:"Light",2:"Heavy",3:"Worrying"},t.weight)}</select>`)}
+    ${f("minutes","Minutes to do",`<input type="number" min="5" max="600" data-f="minutes" value="${esc(t.minutes)}">`)}
+    <label class="ph-s">Who checks it's done<select data-ph="supervise">${memOpts(t.phases?.supervise)}</select></label>` : ""}
+    <div class="actions full"><button class="btn ghost" id="moreBtn" aria-expanded="${more}">${more?"Fewer details":"More details"}</button><button class="btn danger ghost" data-del="${t.id}">Delete</button></div></div>`;
+}
+
+/* ---------- insights ---------- */
+const DAY = 86400000;
+function weekStart(d){ const x = new Date(d); x.setHours(12,0,0,0); x.setDate(x.getDate() - ((x.getDay()+6)%7)); return x.toISOString().slice(0,10); }
+function countedScores(){ const keep = listFilter; listFilter = "all"; const sc = {}; S.members.forEach(m => sc[m.id] = pts(loadFor(m.id).total)); listFilter = keep; return sc; }
+function snapshotWeek(){
+  const wk = weekStart(Date.now()); const scores = countedScores();
+  const cur = S.snapshots.find(x=>x.id===wk);
+  if (cur && JSON.stringify(cur.scores)===JSON.stringify(scores)) return;
+  const doc = {id:wk, week:wk, at:Date.now(), scores};
+  S.snapshots = S.snapshots.filter(x=>x.id!==wk).concat(doc);
+  writeDoc("snapshots/"+wk, doc);
+}
+let dismissed = new Set();
+function insightsData(){
+  const now = Date.now(), E = S.events, since30 = now - 30*DAY;
+  const helpers = S.members.filter(m=>m.role==="helper");
+  const isHelper = id => mem(id)?.role==="helper";
+  // 1. load trend
+  const snaps = S.snapshots.slice().sort((a,b)=>a.week<b.week?-1:1).slice(-8);
+  const series = snaps.map(x=>({week:x.week, v:gauge((x.scores?.[me] ?? 0)/10)}));
+  const last = series[series.length-1]?.v, prev = series[series.length-2]?.v;
+  const change = prev ? Math.round((last-prev)/prev*100) : null;
+  // 2. falling through the cracks (tasks I plan or do)
+  const mineEv = e => e.planner===me || e.executor===me;
+  const done30 = E.filter(e=>e.type==="done" && e.at>=since30 && mineEv(e));
+  const late30 = done30.filter(e=>!e.onTime);
+  const lateCats = {}; late30.forEach(e => lateCats[e.category] = (lateCats[e.category]||0)+1);
+  const worstCat = Object.entries(lateCats).sort((a,b)=>b[1]-a[1])[0];
+  const openMine = S.tasks.filter(t=>!t.done && ["anticipate","plan","execute"].some(ph=>t.phases?.[ph]===me));
+  const overdue = openMine.filter(isLate);
+  const untouched = openMine.filter(t=>!t.due && t.created && now - t.created > 14*DAY);
+  // 3. keeps getting pushed
+  const pushes = {}; E.filter(e=>e.type==="rescheduled" && e.later).forEach(e => pushes[e.taskId] = (pushes[e.taskId]||0)+1);
+  const snoozed = S.tasks.filter(t=>!t.done && (pushes[t.id]||0)>=3 && (t.phases?.plan===me || t.phases?.anticipate===me))
+    .map(t=>({t, n:pushes[t.id]})).sort((a,b)=>b.n-a.n);
+  // 4. hand-offs
+  const hand = helpers.map(h => {
+    const d = E.filter(e=>e.type==="done" && e.at>=since30 && e.executor===h.id);
+    const onTime = d.filter(e=>e.onTime).length;
+    const back = E.filter(e=>e.type==="handoff" && e.at>=since30 && e.phase==="execute" && e.from===h.id && !isHelper(e.to)).length;
+    const planned = S.tasks.filter(t=>!t.done && t.phases?.plan===h.id).length;
+    const tried = d.length + back;
+    return {h, done:d.length, onTime, back, planned, rate: tried ? Math.round(onTime/tried*100) : null};
+  });
+  // 5. bundles
+  const byB = {}; E.filter(e=>e.type==="bundled").forEach(e => (byB[e.bid] ||= {day:e.day, minutes:e.minutes, kind:e.kind, ids:[]}).ids.push(e.taskId));
+  let followed=0, missed=0, pending=0, saved=0;
+  for (const b of Object.values(byB)){
+    const lastOk = addDays(b.day, 1);
+    const allDone = b.ids.every(id => E.some(e=>e.type==="done" && e.taskId===id && e.day && e.day<=lastOk));
+    if (allDone){ followed++; saved += b.minutes||0; } else if (today() <= lastOk) pending++; else missed++;
+  }
+  return {series, last, change, done30, late30, worstCat, overdue, untouched, snoozed, hand, followed, missed, pending, saved, eventsN:E.length};
+}
+function reviewItems(d){
+  const items = [];
+  if (d.change !== null) items.push({text: d.change<0 ? `Your mental load is down <b>${-d.change}%</b> from last week.` : d.change>0 ? `Your mental load is up <b>${d.change}%</b> from last week.` : `Your mental load held steady this week.`});
+  const star = d.hand.filter(x=>x.onTime>0).sort((a,b)=>b.onTime-a.onTime)[0];
+  if (star) items.push({text:`${esc(star.h.name)} finished <b>${star.onTime}</b> task${star.onTime===1?"":"s"} on time this month.${star.planned?` ${esc(star.h.name)} also plans ${star.planned} on their own now.`:""}`});
+  const sn = d.snoozed.find(x=>!dismissed.has(x.t.id));
+  if (sn){ const h = S.members.find(m=>m.role==="helper");
+    items.push({text:`"${esc(sn.t.title)}" was pushed back <b>${sn.n} times</b>. That usually means it's unclear, dreaded, or not worth doing.`,
+      actions:[...(h?[`<button class="btn primary" data-rv-hand="${sn.t.id}" data-to="${h.id}">Hand to ${esc(h.name)}</button>`]:[]), `<button class="btn" data-rv-drop="${sn.t.id}">Drop it</button>`, `<button class="btn ghost" data-rv-keep="${sn.t.id}">Keep</button>`]}); }
+  if (d.worstCat && d.worstCat[1]>=2) items.push({text:`<b>${esc(d.worstCat[0])}</b> is where things slip most: ${d.worstCat[1]} late this month. Worth a look at who owns what there.`});
+  if (d.followed+d.missed) items.push({text:`You followed <b>${d.followed} of ${d.followed+d.missed}</b> bundles${d.saved?`, saving about <b>${d.saved} minutes</b>`:""}.`});
+  if (d.untouched.length) items.push({text:`${d.untouched.length} task${d.untouched.length===1?" has":"s have"} sat for over two weeks with no date. Give ${d.untouched.length===1?"it":"them"} a day or drop ${d.untouched.length===1?"it":"them"}.`});
+  return items;
+}
+function insightsHTML(){
+  snapshotWeek();
+  const d = insightsData(), items = reviewItems(d), who = esc(mem(me)?.name||"you");
+  const maxV = Math.max(1, ...d.series.map(x=>x.v));
+  const pctLate = d.done30.length ? Math.round(d.late30.length/d.done30.length*100) : null;
+  return `<h2>Insights</h2><p class="lead">How everyday life is actually going for ${who}, built from what gets checked off, moved and handed off. Nothing extra to log.</p>
+  ${d.eventsN < 5 ? `<p class="insight">Insights fill in as you use the app. Check things off and move dates as usual, and give it a week.</p>` : ""}
+  ${d.eventsN < 5 ? "" : `
+  ${items.length ? `<h3>This week's review</h3><div class="review">${items.map(it=>`<div class="rv"><p>${it.text}</p>${it.actions?`<div class="actions">${it.actions.join("")}</div>`:""}</div>`).join("")}</div>` : ""}
+  <h3>Mental load, week by week</h3>
+  ${d.series.length ? `<div class="trend" role="img" aria-label="Weekly mental load for ${who}">${d.series.map(x=>`<div class="tcol"><span class="tv">${x.v}</span><span class="tb" style="height:${Math.max(4, x.v/maxV*100)}%"></span><span class="tl">${fmtDate(x.week)}</span></div>`).join("")}</div>
+    <p class="small muted">A new bar appears each week you open Insights. The goal is a line going down.</p>` : ""}
+  <h3>Falling through the cracks</h3>
+  <div class="stats">
+    <div><b>${pctLate===null?"–":pctLate+"%"}</b><span>done late, last 30 days</span></div>
+    <div><b>${d.overdue.length}</b><span>overdue right now</span></div>
+    <div><b>${d.untouched.length}</b><span>untouched 2+ weeks</span></div></div>
+  <h3>Keeps getting pushed</h3>
+  ${d.snoozed.length ? d.snoozed.map(x=>`<div class="task"><div class="trow"><span class="tmain"><div class="ttitle">${esc(x.t.title)}</div><div class="tmeta">Moved later ${x.n} times</div></span><button class="btn ghost small" data-rv-open="${x.t.id}">Open</button></div></div>`).join("") : `<p class="small muted">Nothing has been pushed back three or more times.</p>`}
+  <h3>Hand-offs</h3>
+  ${d.hand.length ? `<div class="stats">${d.hand.map(x=>`<div><b>${x.rate===null?"–":x.rate+"%"}</b><span>${esc(x.h.name)}: ${x.done} done, ${x.onTime} on time${x.back?`, ${x.back} came back to you`:""}</span></div>`).join("")}</div>
+    <p class="small muted">Success = done on time without coming back to you. Only you see this.</p>` : `<p class="small muted">Add a helper to track hand-offs.</p>`}
+  <h3>Bundles</h3>
+  <div class="stats"><div><b>${d.followed}</b><span>followed</span></div><div><b>${d.missed}</b><span>not followed</span></div><div><b>${d.saved}</b><span>minutes saved</span></div></div>
+  ${d.pending?`<p class="small muted">${d.pending} scheduled bundle${d.pending===1?" is":"s are"} still coming up.</p>`:""}`}`;
+}
+
+function bundlesHTML(){
+  const bs = bundles();
+  const mins = bs.reduce((s,b)=>s+b.minutes,0), mind = bs.reduce((s,b)=>s+b.mind,0);
+  return `<h2>Bundles</h2><p class="lead">Tasks that make sense together over the next two weeks, across all your lists, and thinking you could hand to someone who already does the work.</p>
+  ${sendHTML()}
+  <h3>Bundle suggestions</h3>
+  ${bs.length ? `<div class="insight">Together these could save about <b>${mins} minutes</b> and take <b>${bs.reduce((x,b)=>x+(b.handoff?b.tasks.length:b.tasks.length-1),0)} things</b> off your mind.</div>` : `<p class="empty">No bundles yet. Bundles appear when tasks share a place, an area, a provider, or a type like calls or online forms. Add places in ⚙️ so errands can be matched.</p>`}
+  ${bs.map((b,i)=>`<div class="bundle ${b.handoff?"handoff":""}"><div class="bkind">${esc(b.kind)}</div><div class="btitle">${esc(b.title)}</div>
+    <ul>${b.tasks.map(t=>`<li><span class="tag" style="--lc:${listColor(listOf(t))}">${esc(listName(listOf(t)))}</span>${esc(t.title)}${t.due?` <span class="muted small">${fmtDate(t.due)}</span>`:""}</li>`).join("")}</ul>
+    <div class="save">${b.minutes?`<span><b>${b.minutes}</b> min saved</span>`:""}${b.handoff?`<span><b>${b.tasks.length}</b> thing${b.tasks.length===1?"":"s"} off your mind</span>`:`<span><b>${b.tasks.length} → 1</b> things to remember</span>`}</div>
+    <div class="actions">${b.handoff ? `<button class="btn primary" data-hand="${i}">Hand off planning</button><button class="btn" data-handfull="${i}">Hand off fully</button>` : `<button class="btn primary" data-sched="${i}">Schedule together</button>`}</div></div>`).join("")}`;
+}
+
+function householdHTML(){
+  const s = S.settings;
+  return `<h2>Household</h2><p class="lead">Add everyone who shares the work. Helpers can own whole steps, not just do tasks.</p>
+  <div class="seg" role="radiogroup" aria-label="Household type">${Object.entries(TYPES).map(([k,v])=>`<label><input type="radio" name="htype2" value="${k}" ${k===s.type?"checked":""}>${esc(v.label)}</label>`).join("")}</div>
+  <h3>People</h3>
+  ${S.members.map(m=>`<div class="mem"><span class="dot" style="background:${m.color}">${esc(initials(m.name))}</span>
+    <input data-mname="${m.id}" value="${esc(m.name)}" maxlength="30" aria-label="Name">
+    <select data-mrole="${m.id}" aria-label="Role">${Object.entries(ROLES).map(([k,l])=>`<option value="${k}" ${k===m.role?"selected":""}>${l}</option>`).join("")}</select>
+    ${S.members.length>1?`<button class="btn ghost danger" data-mdel="${m.id}" aria-label="Remove ${esc(m.name)}">Remove</button>`:""}</div>`).join("")}
+  <div class="actions" style="margin-top:10px"><button class="btn" id="addMem">Add person</button></div>
+  <h3>Lists</h3><p class="small muted" style="margin-top:0">Rename these to fit your life, like your business names. Untick "Count" to keep a list out of the household load total.</p>
+  ${lists().map(l=>`<div class="mem"><span class="dot" style="background:${listColor(l.id)};width:12px;height:12px"></span>
+    <input data-lname="${l.id}" value="${esc(l.name)}" maxlength="30" aria-label="List name">
+    <label class="toggle"><input type="checkbox" data-lcount="${l.id}" ${l.count!==false?"checked":""}>Count</label>
+    ${lists().length>1?`<button class="btn ghost danger" data-ldel="${l.id}">Remove</button>`:""}</div>`).join("")}
+  <div class="actions" style="margin-top:10px"><button class="btn" id="addList">Add list</button></div>
+  <h3>Places</h3><p class="small muted" style="margin-top:0">Errands at the same place, or places in the same area, get bundled into one trip.</p>
+  ${(s.places||[]).map((p,i)=>`<div class="mem"><input data-pname="${i}" value="${esc(p.name)}" aria-label="Place name"><input data-parea="${i}" value="${esc(p.area||"")}" placeholder="Area, e.g. Uptown" aria-label="Area"><button class="btn ghost danger" data-pdel="${i}">Remove</button></div>`).join("")}
+  <div class="actions" style="margin-top:10px"><button class="btn" id="addPlace">Add place</button></div>
+  <h3>Privacy</h3><p class="small muted" style="margin-top:0">Your tasks, people and history are stored only in this browser. When you tap Add or scan a photo, that text or image is sent to Claude (by Anthropic) to be sorted into tasks. This app keeps no copy on a server.</p>
+  <h3>Start over</h3><p class="small muted" style="margin-top:0">Erase everything on this device and set up again.</p>
+  <div class="actions"><button class="btn danger" id="wipe">${wipeArmed?"Tap again to erase everything":"Erase my data"}</button></div>`
+}
+
+/* ---------- events ---------- */
+function bind(){
+  const app = $("#app");
+  app.querySelectorAll("[data-done]").forEach(el => el.onchange = () => toggleDone(el.dataset.done));
+  app.querySelectorAll("[data-open]").forEach(el => el.onclick = () => { open = open===el.dataset.open ? null : el.dataset.open; more = false; addPerson = null; render(); });
+  app.querySelectorAll("[data-goto]").forEach(el => el.onclick = () => { tab = el.dataset.goto; open = null; render(); window.scrollTo(0,0); });
+  const mb = $("#moreBtn"); if (mb) mb.onclick = () => { more = !more; render(); };
+  const npa = $("#newPersonAdd"), npi = $("#newPerson");
+  if (npi){ npi.focus(); npi.onkeydown = e => { if (e.key==="Enter") npa.click(); }; }
+  if (npa) npa.onclick = async () => { const name = npi.value.trim(); if (!name) return; const ap = addPerson; addPerson = null;
+    const role = {single:"helper", couple:"adult", roommates:"roommate"}[S.settings.type] || "helper";
+    const m = {id:uid(), name:name.slice(0,30), role, color:COLORS[S.members.length % COLORS.length]}; await saveMember(m);
+    const x = S.tasks.find(y=>y.id===ap.taskId); if (x) await assign(x, ap.field, m.id);
+    toast(`${m.name} added${role==="helper"?" as a helper":""}. Change roles in ⚙️.`); };
+  const npc = $("#newPersonCancel"); if (npc) npc.onclick = () => { addPerson = null; render(); };
+  app.querySelectorAll("[data-edit]").forEach(ed => {
+    const t = () => S.tasks.find(x=>x.id===ed.dataset.edit);
+    ed.querySelectorAll("[data-f]").forEach(el => el.onchange = () => { const k=el.dataset.f; let v=el.value; if(k==="weight"||k==="minutes") v=Number(v); const old=t(); if (k==="due" && old.due && v && v!==old.due) logEvent("rescheduled", old, {from:old.due, to:v, later: v>old.due}); saveTask({...old, [k]:v}); });
+    ed.querySelectorAll("[data-ph]").forEach(el => el.onchange = () => { if (el.value==="__new"){ addPerson = {taskId:t().id, field:el.dataset.ph}; render(); return; } assign(t(), el.dataset.ph, el.value); });
+    ed.querySelectorAll("[data-track]").forEach(el => el.onchange = () => { if (el.value==="__new"){ addPerson = {taskId:t().id, field:"track"}; render(); return; } assign(t(), "track", el.value); });
+  });
+  app.querySelectorAll("[data-del]").forEach(el => el.onclick = () => { open=null; delTask(el.dataset.del); toast("Task deleted."); });
+  const sb = $("#sortBtn"); if (sb) sb.onclick = sortDump;
+  app.querySelectorAll("[data-rv-hand]").forEach(el => el.onclick = async () => { const t = S.tasks.find(x=>x.id===el.dataset.rvHand); const h = el.dataset.to; if(!t) return;
+    await logEvent("handoff", t, {phase:"execute", from:t.phases?.execute||"", to:h}); await saveTask({...t, phases:{...t.phases, anticipate:h, plan:h, execute:h}}); toast(`${mem(h)?.name} owns it now.`); });
+  app.querySelectorAll("[data-rv-drop]").forEach(el => el.onclick = () => { delTask(el.dataset.rvDrop); toast("Dropped. One less thing."); });
+  app.querySelectorAll("[data-rv-keep]").forEach(el => el.onclick = () => { dismissed.add(el.dataset.rvKeep); render(); });
+  app.querySelectorAll("[data-rv-open]").forEach(el => el.onclick = () => { open = el.dataset.rvOpen; listFilter = "all"; tab = "tasks"; render(); });
+  app.querySelectorAll("[data-sendwho]").forEach(el => el.onclick = () => { send = {...send, who: send.who===el.dataset.sendwho ? null : el.dataset.sendwho, dirty:false, status:""}; render(); });
+  const sdy = $("#sendDays"); if (sdy) sdy.onchange = () => { send = {...send, days:+sdy.value, dirty:false, status:""}; render(); };
+  const stx = $("#sendText"); if (stx) { stx.oninput = () => { send.text = stx.value; if (!send.dirty){ send.dirty = true; } }; stx.onchange = () => render(); }
+  const srs = $("#sendReset"); if (srs) srs.onclick = () => { send = {...send, dirty:false}; render(); };
+  const se = $("#sendEmail"); if (se) se.onchange = () => { const m = mem(send.who); saveMember({...m, email:se.value.trim()}); };
+  const sp = $("#sendPhone"); if (sp) sp.onchange = () => { const m = mem(send.who); saveMember({...m, phone:sp.value.trim()}); };
+  const sdr = $("#sendDraft"); if (sdr) sdr.onclick = createDraft;
+  const scp = $("#sendCopy"); if (scp) scp.onclick = copyMessage;
+  app.querySelectorAll("[data-list]").forEach(el => el.onclick = () => { listFilter = el.dataset.list; open = null; render(); });
+  const setLists = L => saveSettings({...S.settings, lists:L});
+  app.querySelectorAll("[data-lname]").forEach(el => el.onchange = () => setLists(lists().map(l=>l.id===el.dataset.lname?{...l, name:el.value.trim()||l.name}:l)));
+  app.querySelectorAll("[data-lcount]").forEach(el => el.onchange = () => setLists(lists().map(l=>l.id===el.dataset.lcount?{...l, count:el.checked}:l)));
+  app.querySelectorAll("[data-ldel]").forEach(el => el.onclick = async () => {
+    const id = el.dataset.ldel; const rest = lists().filter(l=>l.id!==id); const to = rest[0].id;
+    const moving = S.tasks.filter(t=>listOf(t)===id);
+    await setLists(rest); if (listFilter===id) listFilter = "all";
+    for (const t of moving) await saveTask({...t, list:to});
+    toast(`List removed. ${moving.length} task${moving.length===1?"":"s"} moved to ${rest[0].name}.`);
+  });
+  const wp = $("#wipe"); if (wp) wp.onclick = () => {
+    if (!wipeArmed){ wipeArmed = true; render(); setTimeout(()=>{ wipeArmed = false; if (tab==="household") render(); }, 5000); return; }
+    wipeArmed = false; try { localStorage.removeItem(LKEY); localStorage.removeItem("unloader-me"); } catch(e){}
+    S = {members:[], tasks:[], settings:null, events:[], snapshots:[]}; tab = "tasks"; listFilter = "all"; render(); };
+  const al = $("#addList"); if (al) al.onclick = () => setLists([...lists(), {id:uid(), name:"New list", count:true}]);
+  const scb = $("#scanBtn"); if (scb) scb.onclick = scanInbox;
+  const pin = $("#photoIn"); if (pin) pin.onchange = () => { const fs = pin.files; if (fs && fs.length) scanPhotos(fs); };
+  const sd = $("#scanDays"); if (sd) sd.onchange = () => { scan.days = +sd.value; };
+  app.querySelectorAll("[data-pick]").forEach(el => el.onchange = () => { scan.items[+el.dataset.pick].pick = el.checked; const b=$("#addScan"); if(b) b.textContent = `Add ${scan.items.filter(x=>x.pick).length} tasks`; });
+  const ads = $("#addScan"); if (ads) ads.onclick = addScanned;
+  const cls = $("#clearScan"); if (cls) cls.onclick = () => { scan = {...scan, status:"idle", items:[], msg:""}; render(); };
+  app.querySelectorAll("[data-sched]").forEach(el => el.onclick = () => scheduleBundle(+el.dataset.sched));
+  app.querySelectorAll("[data-hand]").forEach(el => el.onclick = () => handoff(+el.dataset.hand, false));
+  app.querySelectorAll("[data-handfull]").forEach(el => el.onclick = () => handoff(+el.dataset.handfull, true));
+  app.querySelectorAll("input[name=htype2]").forEach(el => el.onchange = () => saveSettings({...S.settings, type:el.value}));
+  app.querySelectorAll("[data-mname]").forEach(el => el.onchange = () => { const m=mem(el.dataset.mname); saveMember({...m, name:el.value.trim()||m.name}); });
+  app.querySelectorAll("[data-mrole]").forEach(el => el.onchange = () => saveMember({...mem(el.dataset.mrole), role:el.value}));
+  app.querySelectorAll("[data-mdel]").forEach(el => el.onclick = async () => {
+    const id = el.dataset.mdel; const fallbackId = S.members.find(m=>m.id!==id).id;
+    for (const t of S.tasks.filter(t=>Object.values(t.phases||{}).includes(id))){
+      const ph = {...t.phases}; for (const k in ph) if (ph[k]===id) ph[k]=fallbackId; await saveTask({...t, phases:ph});
+    }
+    delMember(id); toast("Removed. Their steps moved to " + mem(fallbackId)?.name + ".");
+  });
+  const am = $("#addMem"); if (am) am.onclick = () => saveMember({id:uid(), name:"New person", role:"helper", color:COLORS[S.members.length % COLORS.length]});
+  const ap = $("#addPlace"); if (ap) ap.onclick = () => saveSettings({...S.settings, places:[...(S.settings.places||[]), {name:"New place", area:""}]});
+  const setPlace = (i, patch) => { const pl=[...S.settings.places]; const old=pl[i].name; pl[i]={...pl[i], ...patch}; saveSettings({...S.settings, places:pl});
+    if (patch.name && patch.name!==old) S.tasks.filter(t=>t.place===old).forEach(t=>saveTask({...t, place:patch.name})); };
+  app.querySelectorAll("[data-pname]").forEach(el => el.onchange = () => setPlace(+el.dataset.pname, {name:el.value.trim()||"Place"}));
+  app.querySelectorAll("[data-parea]").forEach(el => el.onchange = () => setPlace(+el.dataset.parea, {area:el.value.trim()}));
+  app.querySelectorAll("[data-pdel]").forEach(el => el.onclick = () => { const pl=S.settings.places.filter((_,i)=>i!==+el.dataset.pdel); saveSettings({...S.settings, places:pl}); });
+}
+$("#tabs").querySelectorAll("button").forEach(b => b.onclick = () => { tab = b.dataset.tab; open = null; render(); window.scrollTo(0,0); });
+
+init();
+})();
+</script>
+</body>
+</html>
